@@ -1,0 +1,14 @@
+textual>=0.50.0
+py-clob-client>=0.34.0
+python-dotenv>=1.0.0
+anthropic>=0.20.0
+aiohttp>=3.9.0
+websockets>=10.0
+numpy>=1.26.0
+pandas>=2.0.0
+rich>=13.0.0
+# Optional: for on-chain redemption
+# web3>=6.0.0
+# eth-account>=0.10.0
+# Optional: for news scraping
+# scrapling[ai]>=0.2.0

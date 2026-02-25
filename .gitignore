@@ -1,0 +1,28 @@
+# Secrets - NEVER commit
+.env
+*.key
+*.pem
+
+# Data and logs (sensitive + large)
+data/positions.json
+data/trades.json
+data/sim_stats.json
+logs/
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyc
+.pytest_cache/
+.venv/
+venv/
+*.egg-info/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.idea/
+.vscode/
+*.swp
