@@ -15,6 +15,7 @@ class PositionsScreen(Widget):
     PositionsScreen {
         layout: vertical;
         padding: 1;
+        height: 1fr;
     }
 
     DataTable {

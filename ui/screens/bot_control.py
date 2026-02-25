@@ -17,6 +17,8 @@ class BotControlScreen(Widget):
     BotControlScreen {
         layout: vertical;
         padding: 1;
+        height: 1fr;
+        overflow-y: auto;
     }
 
     .strategy-card {

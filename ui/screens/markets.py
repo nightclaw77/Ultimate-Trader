@@ -15,6 +15,7 @@ class MarketsScreen(Widget):
     MarketsScreen {
         layout: vertical;
         padding: 1;
+        height: 1fr;
     }
 
     Input {

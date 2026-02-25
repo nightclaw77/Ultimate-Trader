@@ -34,49 +34,22 @@ class DashboardScreen(Widget):
     DEFAULT_CSS = """
     DashboardScreen {
         layout: grid;
-        grid-size: 3 3;
-        grid-rows: 1fr 1fr 4;
+        grid-size: 3 2;
+        grid-rows: 1fr 3;
         grid-columns: 2fr 1fr 2fr;
+        height: 1fr;
     }
 
     .panel {
         border: solid $primary;
-        padding: 0 1;
     }
 
-    .panel-title {
-        background: $primary;
-        color: $text;
-        text-align: center;
-        text-style: bold;
-    }
-
-    .status-bar {
+    #status-bar {
         column-span: 3;
         background: $panel;
         border: solid $accent;
         padding: 0 1;
-        layout: horizontal;
-    }
-
-    .alert-log {
-        column-span: 1;
-        row-span: 2;
-    }
-
-    .market-table {
-        column-span: 1;
-        row-span: 2;
-    }
-
-    .positions-panel {
-        column-span: 1;
-        row-span: 1;
-    }
-
-    .pnl-panel {
-        column-span: 1;
-        row-span: 1;
+        content-align: left middle;
     }
     """
 
@@ -87,32 +60,31 @@ class DashboardScreen(Widget):
         self._portfolio = get_portfolio()
 
     def compose(self) -> ComposeResult:
-        # Markets table (left)
-        yield Static("TOP MARKETS", classes="panel-title")
-        yield DataTable(id="market-table", classes="panel market-table")
+        # Row 1 col 1: Markets table
+        t1 = DataTable(id="market-table", classes="panel")
+        t1.border_title = "TOP MARKETS"
+        yield t1
 
-        # Positions (middle top)
-        yield Static("ACTIVE POSITIONS", classes="panel-title")
-        yield DataTable(id="position-table", classes="panel positions-panel")
+        # Row 1 col 2: Positions table
+        t2 = DataTable(id="position-table", classes="panel")
+        t2.border_title = "POSITIONS"
+        yield t2
 
-        # Alerts feed (right)
-        yield Static("LIVE ALERTS", classes="panel-title")
-        yield RichLog(id="alert-log", classes="panel alert-log", highlight=True, markup=True)
+        # Row 1 col 3: Alerts feed
+        al = RichLog(id="alert-log", classes="panel", highlight=True, markup=True)
+        al.border_title = "LIVE ALERTS"
+        yield al
 
-        # P&L summary (middle bottom)
-        yield Static("P&L SUMMARY", classes="panel-title")
-        yield Static("Loading...", id="pnl-summary", classes="panel pnl-panel")
-
-        # Status bar (full width bottom)
-        yield Static(id="status-bar", classes="status-bar")
+        # Row 2: status/P&L bar spanning all 3 columns
+        yield Static("", id="status-bar")
 
     async def on_mount(self):
         """Initialize tables."""
         market_table = self.query_one("#market-table", DataTable)
-        market_table.add_columns("Market", "Prob", "Volume", "Change")
+        market_table.add_columns("Market", "Prob", "Volume")
 
         pos_table = self.query_one("#position-table", DataTable)
-        pos_table.add_columns("Market", "Side", "P&L", "Strategy")
+        pos_table.add_columns("Market", "P&L", "Strat")
 
         await self.refresh_data()
 
@@ -173,43 +145,36 @@ class DashboardScreen(Widget):
             return
 
         for pos in positions:
-            pnl_str = f"+${pos.pnl:.2f}" if pos.pnl >= 0 else f"-${abs(pos.pnl):.2f}"
+            pnl_str = f"${pos.pnl:+.2f}"
             table.add_row(
-                pos.market_name[:20],
-                pos.outcome,
+                pos.market_name[:18],
                 pnl_str,
-                pos.strategy,
+                pos.strategy[:6],
             )
 
     def _update_pnl(self):
-        """Update P&L summary."""
+        pass  # merged into _update_status_bar
+
+    def _update_status_bar(self):
+        """Update bottom status bar with P&L + bot state."""
         stats = self._portfolio.get_stats()
         daily = stats["daily_pnl"]
         total = stats["total_pnl"]
         win_rate = stats["win_rate"]
-
         daily_color = "green" if daily >= 0 else "red"
         total_color = "green" if total >= 0 else "red"
-
-        text = (
-            f"[bold]Daily P&L:[/bold] [{daily_color}]${daily:+.2f}[/{daily_color}]   "
-            f"[bold]Total:[/bold] [{total_color}]${total:+.2f}[/{total_color}]   "
-            f"[bold]Win Rate:[/bold] {win_rate:.0f}%   "
-            f"[bold]Open:[/bold] {stats['open_positions']}"
+        mode_str = (
+            "[yellow]DRY RUN[/yellow]" if cfg.DRY_RUN
+            else "[cyan]PAPER[/cyan]" if cfg.PAPER_TRADE
+            else "[red]LIVE[/red]"
         )
-        try:
-            self.query_one("#pnl-summary", Static).update(text)
-        except Exception:
-            pass
-
-    def _update_status_bar(self):
-        """Update bottom status bar with bot states."""
-        dry = "[yellow]DRY RUN[/yellow]" if cfg.DRY_RUN else "[green]LIVE[/green]"
         text = (
-            f" {dry}  |  "
-            f"Max Position: ${cfg.MAX_POSITION_USDC}  |  "
-            f"Daily Limit: ${cfg.DAILY_LOSS_LIMIT}  |  "
-            f"{datetime.now().strftime('%H:%M:%S')}"
+            f" {mode_str}  |  "
+            f"[bold]Daily:[/bold] [{daily_color}]${daily:+.2f}[/{daily_color}]  "
+            f"[bold]Total:[/bold] [{total_color}]${total:+.2f}[/{total_color}]  "
+            f"[bold]Win:[/bold] {win_rate:.0f}%  "
+            f"[bold]Open:[/bold] {stats['open_positions']}  |  "
+            f"[dim]{datetime.now().strftime('%H:%M:%S')}[/dim]"
         )
         try:
             self.query_one("#status-bar", Static).update(text)

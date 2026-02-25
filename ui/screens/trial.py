@@ -37,6 +37,7 @@ class TrialScreen(Widget):
     TrialScreen {
         layout: vertical;
         padding: 1;
+        height: 1fr;
     }
 
     .trial-header {

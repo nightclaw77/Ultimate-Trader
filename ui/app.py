@@ -30,6 +30,8 @@ Screen { background: $surface; }
 .dry-run-banner  { background: $warning;  color: $text; text-align: center; height: 1; text-style: bold; }
 .paper-banner    { background: $accent;   color: $text; text-align: center; height: 1; text-style: bold; }
 .live-banner     { background: $error;    color: $text; text-align: center; height: 1; text-style: bold; }
+TabbedContent    { height: 1fr; }
+TabPane          { height: 1fr; padding: 0; }
 """
 
 
