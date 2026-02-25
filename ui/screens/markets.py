@@ -49,7 +49,7 @@ class MarketsScreen(Widget):
         if query:
             markets = await self._client.search_markets(query, limit=50)
         else:
-            markets = await self._client.get_markets(limit=50, order="volume_num")
+            markets = await self._client.get_markets(limit=50, order="volume")
 
         self._all_markets = markets
 

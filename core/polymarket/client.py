@@ -61,7 +61,11 @@ class PolymarketClient:
         if self._session is None or self._session.closed:
             self._session = aiohttp.ClientSession(
                 timeout=aiohttp.ClientTimeout(total=30),
-                headers={"User-Agent": "UltimateTrader/1.0"},
+                headers={
+                    "User-Agent": "UltimateTrader/1.0",
+                    # Tell server to use gzip only — avoids brotli decode errors
+                    "Accept-Encoding": "gzip, deflate",
+                },
             )
 
     async def close(self):
@@ -91,7 +95,7 @@ class PolymarketClient:
         limit: int = 50,
         offset: int = 0,
         active: bool = True,
-        order: str = "volume_num",
+        order: str = "volume",
     ) -> list[dict]:
         """Fetch markets from Gamma API sorted by volume."""
         await self._ensure_session()
@@ -108,6 +112,7 @@ class PolymarketClient:
                 if resp.status == 200:
                     data = await resp.json()
                     return data if isinstance(data, list) else data.get("markets", [])
+                logger.warning(f"Markets fetch HTTP {resp.status}: {await resp.text()}")
         except Exception as e:
             logger.warning(f"Markets fetch failed: {e}")
         return []
@@ -159,11 +164,12 @@ class PolymarketClient:
         await self._ensure_session()
         try:
             url = f"{cfg.GAMMA_HOST}/markets"
-            params = {"q": query, "limit": limit, "active": "true"}
+            params = {"question": query, "limit": limit, "active": "true"}
             async with self._session.get(url, params=params) as resp:
                 if resp.status == 200:
                     data = await resp.json()
                     return data if isinstance(data, list) else []
+                logger.warning(f"Search HTTP {resp.status}: {await resp.text()}")
         except Exception as e:
             logger.warning(f"Search failed: {e}")
         return []

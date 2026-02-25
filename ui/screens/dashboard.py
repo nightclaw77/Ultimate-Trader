@@ -101,7 +101,7 @@ class DashboardScreen(Widget):
     async def _update_markets(self):
         """Refresh top markets table."""
         try:
-            markets = await self._client.get_markets(limit=20, order="volume_num")
+            markets = await self._client.get_markets(limit=20, order="volume")
             table = self.query_one("#market-table", DataTable)
             table.clear()
 
