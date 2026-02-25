@@ -59,9 +59,13 @@ ANTHROPIC_API_KEY = _get("ANTHROPIC_API_KEY")
 TELEGRAM_BOT_TOKEN = _get("TELEGRAM_BOT_TOKEN")
 TELEGRAM_CHAT_ID = _get("TELEGRAM_CHAT_ID")
 
+# ---- Trading Mode ----
+PAPER_TRADE = _get_bool("PAPER_TRADE", default=True)
+DRY_RUN     = _get_bool("DRY_RUN",     default=False)
+PAPER_STARTING_BALANCE = _get_float("PAPER_STARTING_BALANCE", default=50.0)
+
 # ---- Safety ----
-DRY_RUN = _get_bool("DRY_RUN", default=True)
-MAX_POSITION_USDC = _get_float("MAX_POSITION_USDC", default=50.0)
+MAX_POSITION_USDC = _get_float("MAX_POSITION_USDC", default=10.0)
 DAILY_LOSS_LIMIT = _get_float("DAILY_LOSS_LIMIT", default=20.0)
 MAX_OPEN_POSITIONS = _get_int("MAX_OPEN_POSITIONS", default=5)
 
@@ -95,6 +99,17 @@ WATCHED_WALLETS_FILE = DATA_DIR / "watched_wallets.json"
 SIM_STATS_FILE = DATA_DIR / "sim_stats.json"
 
 
+
+
+def trading_mode() -> str:
+    """Returns current trading mode."""
+    if PAPER_TRADE:
+        return "PAPER"
+    if DRY_RUN:
+        return "DRY_RUN"
+    return "LIVE"
+
+
 def validate() -> list[str]:
     """Returns list of missing critical config."""
     errors = []
@@ -109,13 +124,20 @@ def validate() -> list[str]:
 
 def summary() -> str:
     """Returns a human-readable config summary (no secrets)."""
+    mode = trading_mode()
+    mode_desc = {
+        "PAPER":   f"PAPER TRADE (${PAPER_STARTING_BALANCE:.0f} virtual USDC)",
+        "DRY_RUN": "DRY RUN (log only, no execution)",
+        "LIVE":    "LIVE TRADING (REAL MONEY!)",
+    }
     lines = [
-        f"DRY_RUN: {'YES (safe mode)' if DRY_RUN else 'NO (live trading!)'}",
+        f"Mode: {mode_desc.get(mode, mode)}",
         f"Max Position: ${MAX_POSITION_USDC} USDC",
         f"Daily Loss Limit: ${DAILY_LOSS_LIMIT}",
         f"Max Open Positions: {MAX_OPEN_POSITIONS}",
         f"MM Assets: {', '.join(MM_ASSETS)}",
         f"Sniper Assets: {', '.join(SNIPER_ASSETS)}",
         f"Copy Trader: {'configured' if COPY_TRADER_ADDRESS else 'not set'}",
+        f"Telegram: {'✓ connected' if TELEGRAM_BOT_TOKEN else '✗ not set'}",
     ]
     return "\n".join(lines)
