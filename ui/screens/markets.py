@@ -1,6 +1,8 @@
 """
 Markets Screen - Browse and search Polymarket prediction markets.
 """
+import json
+
 from textual.app import ComposeResult
 from textual.widget import Widget
 from textual.widgets import DataTable, Input, Label, Static
@@ -55,28 +57,26 @@ class MarketsScreen(Widget):
 
         for m in markets:
             question = m.get("question") or m.get("title", "N/A")
-            tokens = m.get("tokens") or []
-            yes_price = 0
-            if tokens:
-                for t in tokens:
-                    outcome = (t.get("outcome") or "").upper()
-                    if "YES" in outcome:
-                        yes_price = float(t.get("price", 0))
-                        break
+            # outcomePrices is a JSON string: '["0.615", "0.385"]'
+            raw_prices = m.get("outcomePrices") or "[]"
+            try:
+                prices = json.loads(raw_prices) if isinstance(raw_prices, str) else raw_prices
+                prob = f"{float(prices[0])*100:.1f}%" if prices else "?"
+            except Exception:
+                ltp = m.get("lastTradePrice")
+                prob = f"{float(ltp)*100:.1f}%" if ltp else "?"
 
-            prob = f"{yes_price*100:.1f}%" if yes_price else "?"
-            volume = m.get("volume") or m.get("volume_num", 0)
-            liq = m.get("liquidity") or m.get("liquidity_num", 0)
+            volume = float(m.get("volumeNum") or m.get("volume") or 0)
+            liq = float(m.get("liquidityNum") or m.get("liquidity") or 0)
 
             def fmt_usd(v):
-                v = float(v or 0)
                 if v >= 1_000_000:
                     return f"${v/1_000_000:.1f}M"
                 if v >= 1_000:
                     return f"${v/1_000:.0f}K"
                 return f"${v:.0f}"
 
-            end = (m.get("end_date_iso") or m.get("endDateIso", ""))[:10]
+            end = (m.get("endDateIso") or m.get("end_date_iso", ""))[:10]
 
             table.add_row(
                 question[:45],

@@ -2,6 +2,7 @@
 Dashboard Screen - Main TUI screen with live market data, positions, and alerts.
 """
 import asyncio
+import json
 from datetime import datetime
 from typing import Callable
 
@@ -107,29 +108,28 @@ class DashboardScreen(Widget):
 
             for m in markets[:15]:
                 question = m.get("question") or m.get("title", "")
-                tokens = m.get("tokens") or []
-                prob = "?"
-                if tokens:
-                    yes_price = tokens[0].get("price") if tokens else 0
-                    if yes_price:
-                        prob = f"{float(yes_price)*100:.0f}%"
+                # outcomePrices is a JSON string: '["0.615", "0.385"]'
+                raw_prices = m.get("outcomePrices") or "[]"
+                try:
+                    prices = json.loads(raw_prices) if isinstance(raw_prices, str) else raw_prices
+                    prob = f"{float(prices[0])*100:.0f}%" if prices else "?"
+                except Exception:
+                    prob = f"{float(m.get('lastTradePrice', 0))*100:.0f}%" if m.get('lastTradePrice') else "?"
 
-                volume = m.get("volume") or m.get("volume_num", 0)
-                if volume:
-                    if float(volume) >= 1_000_000:
-                        vol_str = f"${float(volume)/1_000_000:.1f}M"
-                    elif float(volume) >= 1_000:
-                        vol_str = f"${float(volume)/1_000:.0f}K"
-                    else:
-                        vol_str = f"${float(volume):.0f}"
+                volume = float(m.get("volumeNum") or m.get("volume") or 0)
+                if volume >= 1_000_000:
+                    vol_str = f"${volume/1_000_000:.1f}M"
+                elif volume >= 1_000:
+                    vol_str = f"${volume/1_000:.0f}K"
+                elif volume > 0:
+                    vol_str = f"${volume:.0f}"
                 else:
                     vol_str = "-"
 
                 table.add_row(
-                    question[:30] + ("..." if len(question) > 30 else ""),
+                    question[:30] + ("…" if len(question) > 30 else ""),
                     prob,
                     vol_str,
-                    "→",
                 )
         except Exception:
             pass
@@ -141,7 +141,7 @@ class DashboardScreen(Widget):
         positions = self._portfolio.get_open_positions()
 
         if not positions:
-            table.add_row("No open positions", "", "", "")
+            table.add_row("No open positions", "", "")
             return
 
         for pos in positions:

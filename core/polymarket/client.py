@@ -5,7 +5,9 @@ Based on patterns from:
 - nautilus_trader/adapters/polymarket/
 """
 import asyncio
+import json
 import logging
+from datetime import datetime, timezone
 from functools import lru_cache
 from typing import Optional
 
@@ -97,12 +99,15 @@ class PolymarketClient:
         active: bool = True,
         order: str = "volume",
     ) -> list[dict]:
-        """Fetch markets from Gamma API sorted by volume."""
+        """Fetch LIVE open markets from Gamma API sorted by volume."""
         await self._ensure_session()
         try:
+            today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
             url = f"{cfg.GAMMA_HOST}/markets"
             params = {
-                "active": str(active).lower(),
+                "active": "true",
+                "closed": "false",
+                "end_date_min": today,
                 "limit": limit,
                 "offset": offset,
                 "order": order,
