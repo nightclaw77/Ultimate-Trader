@@ -103,6 +103,12 @@ class UltimateTraderApp(App):
         mode = cfg.trading_mode()
         self._notifier.system_alert(f"Ultimate Trader started — Mode: {mode}")
 
+        # Auto-start the AutoTrader strategy
+        auto = self._strategies.get("auto")
+        if auto:
+            await auto.start()
+            self._handle_alert("success", "AutoTrader auto-started — scanning crypto markets")
+
         self.set_interval(5, self.action_refresh)
 
     def _handle_alert(self, level: str, message: str):

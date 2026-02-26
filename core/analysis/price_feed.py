@@ -152,12 +152,12 @@ class PriceFeed:
 
         # Confidence from magnitude and volume confirmation
         magnitude = abs(score)
-        confidence = min(magnitude / 0.8, 1.0)  # full confidence at 0.8% move
+        confidence = min(magnitude / 0.3, 1.0)  # full confidence at 0.8% move
         if vol_ratio > 1.5:
             confidence = min(confidence * 1.2, 1.0)  # boost if high volume
 
         # Decision thresholds
-        THRESHOLD = 0.12  # minimum % move to act
+        THRESHOLD = 0.04  # minimum % move to act
 
         if score > THRESHOLD:
             trend = "UP"
