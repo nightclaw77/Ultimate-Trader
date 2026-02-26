@@ -87,6 +87,14 @@ SNIPER_PRICE = _get_float("SNIPER_PRICE", default=0.02)
 SNIPER_SHARES = _get_int("SNIPER_SHARES", default=50)
 SNIPER_SELL_TARGET = _get_float("SNIPER_SELL_TARGET", default=0.15)
 
+# ---- Auto Trader ----
+BASE_TRADE_SIZE = _get_float("BASE_TRADE_SIZE", default=3.0)
+MAX_TRADE_SIZE = _get_float("MAX_TRADE_SIZE", default=8.0)
+AUTO_PROFIT_TARGET = _get_float("AUTO_PROFIT_TARGET", default=0.14)
+AUTO_STOP_LOSS = _get_float("AUTO_STOP_LOSS", default=0.10)
+MAX_OPEN_AUTO_TRADES = _get_int("MAX_OPEN_AUTO_TRADES", default=3)
+AUTO_MIN_CONFIDENCE = _get_float("AUTO_MIN_CONFIDENCE", default=0.25)
+
 # ---- Data paths ----
 DATA_DIR = Path(__file__).parent / "data"
 LOGS_DIR = Path(__file__).parent / "logs"

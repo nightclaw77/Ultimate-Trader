@@ -14,6 +14,7 @@ from core.notifications import get_notifier
 from core.paper_trading.smart_executor import SmartExecutor
 from core.polymarket.client import get_client
 from core.risk.portfolio import get_portfolio
+from core.strategies.auto_trader import AutoTrader
 from core.strategies.copy_trader import CopyTrader
 from core.strategies.market_maker import MarketMaker
 from core.strategies.sniper import Sniper
@@ -82,6 +83,7 @@ class UltimateTraderApp(App):
 
     async def on_mount(self):
         self._strategies = {
+            "auto":   AutoTrader(),
             "copy":   CopyTrader(),
             "mm":     MarketMaker(),
             "sniper": Sniper(),

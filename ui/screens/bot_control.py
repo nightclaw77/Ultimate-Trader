@@ -56,12 +56,30 @@ class BotControlScreen(Widget):
         self._toggle = toggle_callback
 
     def compose(self) -> ComposeResult:
-        if cfg.DRY_RUN:
-            yield Static("⚠  DRY RUN MODE ACTIVE - No real trades will execute", classes="warning-text")
+        mode = cfg.trading_mode()
+        if mode == "PAPER":
+            yield Static("PAPER TRADE MODE — Virtual money only, real market prices", classes="warning-text")
+        elif mode == "DRY_RUN":
+            yield Static("DRY RUN MODE — Log only, no execution", classes="warning-text")
         else:
-            yield Static("🔴  LIVE TRADING MODE - Real funds at risk!", classes="warning-text")
+            yield Static("LIVE TRADING MODE — Real funds at risk!", classes="warning-text")
 
         yield Static("")
+
+        # Auto Trader (NEW — main strategy)
+        with Widget(classes="strategy-card"):
+            with Widget(classes="strategy-info"):
+                yield Label("[bold cyan]Auto Trader[/bold cyan]  [dim](Crypto Up/Down — 5-15 min markets)[/dim]")
+                yield Label(
+                    f"BTC+ETH+SOL+XRP  |  "
+                    f"Size: ${cfg.BASE_TRADE_SIZE:.0f}-${cfg.MAX_TRADE_SIZE:.0f}  |  "
+                    f"Profit: +{int(cfg.AUTO_PROFIT_TARGET*100)}%  "
+                    f"Stop: -{int(cfg.AUTO_STOP_LOSS*100)}%  |  "
+                    f"Max {cfg.MAX_OPEN_AUTO_TRADES} trades"
+                )
+            with Widget(classes="strategy-controls"):
+                yield Button("START", id="start-auto", variant="success")
+                yield Button("Stop", id="stop-auto", variant="error")
 
         # Copy Trader
         with Widget(classes="strategy-card"):
@@ -94,12 +112,16 @@ class BotControlScreen(Widget):
 
         # Config overview
         with Widget(classes="config-panel"):
-            yield Static("[bold]Current Configuration[/bold]")
+            yield Static("[bold]Configuration[/bold]")
             yield Static(cfg.summary())
 
     async def on_button_pressed(self, event: Button.Pressed):
         btn_id = event.button.id
-        if btn_id == "start-copy":
+        if btn_id == "start-auto":
+            await self._toggle("auto", True)
+        elif btn_id == "stop-auto":
+            await self._toggle("auto", False)
+        elif btn_id == "start-copy":
             await self._toggle("copy", True)
         elif btn_id == "stop-copy":
             await self._toggle("copy", False)
